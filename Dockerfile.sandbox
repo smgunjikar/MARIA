@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    MPLCONFIGDIR=/tmp/matplotlib
+
+RUN pip install --no-cache-dir \
+    numpy==1.26.4 \
+    pandas==2.2.2 \
+    scikit-learn==1.5.1 \
+    xgboost==2.1.1 \
+    matplotlib==3.9.2
+
+RUN mkdir -p /workspace && chown 65534:65534 /workspace
+
+WORKDIR /workspace
+USER 65534:65534
