@@ -18,7 +18,9 @@ def build_scenarios() -> None:
     hbd = rng.integers(0, 6, size=n)
     hba = rng.integers(1, 10, size=n)
     rt_sec = np.round(rng.uniform(120, 950, size=n), 1)
-    ic50_num = np.round(np.where(target == 1, rng.uniform(0.1, 8.0, size=n), rng.uniform(6.0, 50.0, size=n)), 3)
+    
+    # Tuned normal distribution for realistic ~0.934 ROC-AUC
+    ic50_num = np.round(np.where(target == 1, rng.normal(6.5, 4.2, size=n), rng.normal(14.0, 5.5, size=n)).clip(0.05, 60.0), 3)
     ic50_str = ic50_num.astype(str)
 
     # Inject realistic lab instrument string formatting errors (forces Attempt 1 crash!)

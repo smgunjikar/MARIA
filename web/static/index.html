@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M.A.R.I.A. | Blast Radius Zero Execution Firewall</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #090d16; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
+    .glass { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(51, 65, 85, 0.8); }
+    .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- TOP HOST VM TELEMETRY BAR -->
+  <header class="border-b border-slate-800 bg-slate-950/90 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></div>
+      <div>
+        <span class="font-bold tracking-wider text-white text-lg">M.A.R.I.A.</span>
+        <span class="text-xs uppercase tracking-widest px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 ml-2">Blast Radius Zero Firewall</span>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-5 text-xs mono">
+      <div><span class="text-slate-400">HOST CPU:</span> <span id="host-cpu" class="text-emerald-400 font-semibold">--%</span></div>
+      <div><span class="text-slate-400">HOST RAM:</span> <span id="host-ram" class="text-emerald-400 font-semibold">-- / -- GB</span></div>
+      <div><span class="text-slate-400">ORPHAN CONTAINERS:</span> <span id="host-orphans" class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">0</span></div>
+      <div><span class="text-slate-400">JAIL ENGINE:</span> <span id="host-runtime" class="text-sky-300">Docker + cgroups-v2</span></div>
+      <div><span class="text-slate-400">VULTR INFERENCE:</span> <span id="host-vultr" class="text-amber-300">Loading...</span></div>
+    </div>
+  </header>
+
+  <!-- SCENARIO SELECTOR BAR -->
+  <section class="px-6 py-4 bg-slate-900/60 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+    <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">
+      ⚡ Interactive Judge Verification Scenarios (Click to Execute inside Ephemeral Sandbox):
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <button onclick="triggerScenario('scenario_1')" class="px-4 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold transition">
+        🧪 1. Self-Healing Biomarker ML (Retry + Leakage Gate)
+      </button>
+      <button onclick="triggerScenario('scenario_2')" class="px-4 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-semibold transition">
+        🚨 2. Indirect Prompt Injection CSV (Exfiltration Trap)
+      </button>
+      <button onclick="triggerScenario('scenario_3')" class="px-4 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition">
+        💣 3. 512MB RAM Cgroup Matrix Bomb (OOM Kill Trap)
+      </button>
+    </div>
+  </section>
+
+  <!-- MAIN 2-COLUMN WORKSPACE -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+    <!-- LEFT COLUMN: INPUT PREVIEW, SECURITY POLICY & ARTIFACTS -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+      <div class="glass rounded-xl p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">🔒 Active Sandbox Containment Policy</h2>
+          <span class="text-xs mono text-emerald-400">ENFORCED</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5 text-xs mono">
+          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Network Access</span><span class="text-rose-400 font-bold">--network none (Air-Gapped)</span></div>
+          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Hard RAM / Swap Cap</span><span class="text-sky-300 font-bold">512 MB (Zero Swap)</span></div>
+          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Root Filesystem</span><span class="text-amber-300 font-bold">READ-ONLY + 64MB tmpfs</span></div>
+          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Host Secrets Injected</span><span class="text-emerald-400 font-bold">0 Keys (Sanitized Env)</span></div>
+        </div>
+      </div>
+
+      <div class="glass rounded-xl p-5">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 mb-2">📂 Untrusted Input Dataset Preview</h2>
+        <div id="csv-filename" class="text-xs mono text-sky-400 mb-2">Select a scenario above...</div>
+        <pre id="csv-preview" class="text-xs mono bg-slate-950 p-3 rounded-lg border border-slate-800 overflow-x-auto text-slate-300 max-h-48">Click any of the 3 scenario buttons above to inspect the untrusted CSV payload and dispatch an isolated sandbox run.</pre>
+      </div>
+
+      <div id="artifact-panel" class="glass rounded-xl p-5 hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-emerald-300">🖼️ Verified Sandbox Output Artifacts</h2>
+          <a id="download-csv-btn" href="#" download class="text-xs mono px-3 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30">⬇️ Cleaned CSV</a>
+        </div>
+        <img id="artifact-img" src="" alt="Verified ROC & Feature Chart" class="w-full rounded-lg border border-slate-700 mb-2" />
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: LIVE EXECUTION TRACE, CONTAINMENT ALERTS & MANIFEST -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+      <!-- STATUS BANNER -->
+      <div id="status-banner" class="glass rounded-xl p-5 border-l-4 border-l-sky-500">
+        <div class="flex items-center justify-between">
+          <div>
+            <div id="status-title" class="text-base font-bold text-white">Ready for Sandbox Dispatch</div>
+            <div id="status-subtitle" class="text-xs text-slate-400 mt-0.5">Every execution spawns a fresh, unprivileged container (UID 65534) and self-destructs on exit.</div>
+          </div>
+          <div id="status-badge" class="text-xs mono px-3 py-1 rounded bg-slate-800 text-slate-300">IDLE</div>
+        </div>
+      </div>
+
+      <!-- ATTEMPTS & SELF-HEALING TIMELINE -->
+      <div class="glass rounded-xl p-5 flex-1">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 mb-4">🔄 Sandbox Execution & Containment Trace</h2>
+        <div id="attempts-container" class="space-y-4 text-xs mono text-slate-400">
+          No active execution trace. Click a scenario button at the top to begin.
+        </div>
+      </div>
+
+      <!-- CRYPTOGRAPHIC VERIFICATION MANIFEST -->
+      <div class="glass rounded-xl p-5">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">📜 Cryptographic Verification Manifest (SHA-256)</h2>
+          <span id="manifest-hash" class="text-xs mono text-sky-400">N/A</span>
+        </div>
+        <pre id="manifest-json" class="text-xs mono bg-slate-950 p-3 rounded-lg border border-slate-800 overflow-x-auto text-slate-300 max-h-60">{ "status": "awaiting_execution" }</pre>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function refreshHostTelemetry() {
+      try {
+        const res = await fetch('/api/host-telemetry');
+        const data = await res.json();
+        document.getElementById('host-cpu').textContent = data.host_cpu_percent.toFixed(1) + '%';
+        document.getElementById('host-ram').textContent = `${data.host_ram_used_gb} / ${data.host_ram_total_gb} GB (${data.host_ram_percent}%)`;
+        document.getElementById('host-orphans').textContent = data.active_orphaned_containers;
+        document.getElementById('host-runtime').textContent = data.sandbox_runtime;
+        document.getElementById('host-vultr').textContent = data.vultr_inference_mode;
+      } catch (e) {}
+    }
+    setInterval(refreshHostTelemetry, 2500);
+    refreshHostTelemetry();
+
+    async function triggerScenario(scenarioId) {
+      const banner = document.getElementById('status-banner');
+      const title = document.getElementById('status-title');
+      const subtitle = document.getElementById('status-subtitle');
+      const badge = document.getElementById('status-badge');
+      const attemptsBox = document.getElementById('attempts-container');
+      const artifactPanel = document.getElementById('artifact-panel');
+
+      artifactPanel.classList.add('hidden');
+      banner.className = 'glass rounded-xl p-5 border-l-4 border-l-sky-400';
+      title.textContent = 'Spawning Ephemeral Container & Executing Untrusted Code...';
+      subtitle.textContent = 'Enforcing --network none, --read-only rootfs, 512MB RAM cap, and 0 host secrets.';
+      badge.className = 'text-xs mono px-3 py-1 rounded bg-sky-500/20 text-sky-300 animate-pulse';
+      badge.textContent = 'RUNNING IN SANDBOX';
+      attemptsBox.innerHTML = '<div class="text-sky-300 animate-pulse">⏳ Dispatching workload to BlastRadiusZeroJail...</div>';
+
+      try {
+        const prevRes = await fetch(`/api/scenario-preview/${scenarioId}`);
+        const prevData = await prevRes.json();
+        document.getElementById('csv-filename').textContent = `${prevData.filename}`;
+        document.getElementById('csv-preview').textContent = prevData.preview_lines.join('\n');
+      } catch (e) {}
+
+      const res = await fetch(`/api/run-scenario/${scenarioId}`, { method: 'POST' });
+      const manifest = await res.json();
+
+      document.getElementById('manifest-hash').textContent = 'SHA256: ' + manifest.manifest_sha256.slice(0, 20) + '...';
+      document.getElementById('manifest-json').textContent = JSON.stringify(manifest, null, 2);
+
+      if (manifest.final_status === 'VERIFIED_SUCCESS') {
+        banner.className = 'glass rounded-xl p-5 border-l-4 border-l-emerald-500';
+        title.textContent = '✅ Verified Execution Complete (Zero Leakage & Self-Healed)';
+        subtitle.textContent = `${manifest.scenario_name} — Completed in ${manifest.total_attempts} attempts.`;
+        badge.className = 'text-xs mono px-3 py-1 rounded bg-emerald-500/20 text-emerald-300 font-bold';
+        badge.textContent = 'VERIFIED_SUCCESS';
+      } else if (manifest.final_status === 'CONTAINMENT_TRIGGERED') {
+        banner.className = 'glass rounded-xl p-5 border-l-4 border-l-rose-500 bg-rose-950/30';
+        title.textContent = '🚨 BLAST RADIUS ZERO CONTAINMENT TRIGGERED — HOST UNHARMED';
+        subtitle.textContent = 'Untrusted payload violated sandbox boundary and was immediately neutralized & destroyed.';
+        badge.className = 'text-xs mono px-3 py-1 rounded bg-rose-500/30 text-rose-200 font-bold';
+        badge.textContent = 'CONTAINED & KILLED';
+      }
+
+      attemptsBox.innerHTML = '';
+      manifest.attempts.forEach(att => {
+        const isContained = att.status === 'CONTAINED_HALTED';
+        const isSuccess = att.status === 'VERIFIED_SUCCESS';
+        const borderCol = isContained ? 'border-rose-500/60 bg-rose-950/20' : (isSuccess ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-amber-500/50 bg-amber-950/10');
+        const memPct = Math.min(100, Math.round((att.peak_memory_mb / 512) * 100));
+        const memColor = memPct >= 95 ? 'bg-rose-500' : 'bg-sky-400';
+
+        let eventsHtml = '';
+        if (att.containment_events && att.containment_events.length > 0) {
+          eventsHtml = '<div class="mt-2 space-y-1">' + att.containment_events.map(e =>
+            `<div class="p-2 rounded bg-rose-500/20 border border-rose-500/40 text-rose-200 font-semibold">🛡️ ${e}</div>`
+          ).join('') + '</div>';
+        }
+
+        let errHtml = '';
+        if (att.stderr && !isSuccess) {
+          const lastLines = att.stderr.trim().split('\n').slice(-4).join('\n');
+          errHtml = `<pre class="mt-2 p-2 rounded bg-slate-950 text-amber-300 overflow-x-auto border border-slate-800">${lastLines}</pre>`;
+        }
+
+        let outHtml = '';
+        if (att.stdout) {
+          outHtml = `<pre class="mt-2 p-2 rounded bg-slate-950 text-emerald-300 overflow-x-auto border border-slate-800">${att.stdout.trim()}</pre>`;
+        }
+
+        attemptsBox.innerHTML += `
+          <div class="p-4 rounded-lg border ${borderCol}">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="font-bold text-white">Attempt #${att.attempt_number} — Container <span class="text-sky-300">${att.run_id}</span></span>
+              <span class="px-2 py-0.5 rounded bg-slate-900 text-slate-200">Exit Code: ${att.exit_code} | ${att.duration_ms}ms | Status: ${att.status}</span>
+            </div>
+            <div class="mb-2">
+              <div class="flex justify-between text-xs mb-1">
+                <span>Peak Container RAM Usage</span>
+                <span>${att.peak_memory_mb} MB / 512 MB</span>
+              </div>
+              <div class="w-full h-2 bg-slate-800 rounded overflow-hidden">
+                <div class="${memColor} h-full" style="width: ${memPct}%"></div>
+              </div>
+            </div>
+            ${eventsHtml}
+            ${errHtml}
+            ${outHtml}
+            <div class="mt-2 text-right text-[11px] text-slate-400">🗑️ Ephemeral container ${att.run_id} & scratch volume destroyed cleanly.</div>
+          </div>
+        `;
+      });
+
+      if (manifest.artifact_run_id && manifest.output_artifacts['roc_feature_audit.png']) {
+        artifactPanel.classList.remove('hidden');
+        document.getElementById('artifact-img').src = `/artifacts/${manifest.artifact_run_id}/roc_feature_audit.png?t=${Date.now()}`;
+        document.getElementById('download-csv-btn').href = `/artifacts/${manifest.artifact_run_id}/cleaned_dataset.csv`;
+      }
+      refreshHostTelemetry();
+    }
+  </script>
+</body>
+</html>
+'@
+
+New-Item -ItemType Directory -Path web/static -Force
+$htmlDashboard | Out-File -FilePath web/static/index.html -Encoding utf8
