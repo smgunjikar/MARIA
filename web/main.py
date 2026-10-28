@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+import pandas as pd
 import psutil
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
@@ -12,7 +13,7 @@ from core.self_healing_loop import MariaSelfHealingOrchestrator
 app = FastAPI(
     title="M.A.R.I.A. | Blast Radius Zero Control Plane",
     description="Multi-Agent Recursive Inspection & Audit on Vultr Cloud Compute",
-    version="2.0.0",
+    version="2.1.0",
 )
 
 jail = BlastRadiusZeroJail()
@@ -36,7 +37,7 @@ def get_host_telemetry():
         "host_ram_percent": vm.percent,
         "active_orphaned_containers": jail.count_active_sandboxes(),
         "sandbox_runtime": "gVisor (runsc)" if jail.has_gvisor else "Docker Overlay + Hardened cgroups-v2",
-        "vultr_inference_mode": "LIVE ([api.vultrinference.com/v1](https://api.vultrinference.com/v1))" if has_key else "READY (Deterministic Fallback Active)",
+        "vultr_inference_mode": "LIVE (api.vultrinference.com/v1)" if has_key else "READY (Deterministic Fallback Active)",
         "sandbox_caps": {
             "memory_mb": jail.memory_limit_mb,
             "pids_limit": jail.pids_limit,
@@ -52,7 +53,7 @@ def get_scenario_preview(scenario_id: str):
     if scenario_id not in SCENARIO_FILES:
         raise HTTPException(status_code=404, detail="Unknown scenario_id")
     csv_path = SCENARIO_FILES[scenario_id]
-    lines = csv_path.read_text(encoding="utf-8").splitlines()[:8]
+    lines = csv_path.read_text(encoding="utf-8").splitlines()[:10]
     return {"filename": csv_path.name, "preview_lines": lines}
 
 
@@ -65,6 +66,38 @@ def run_scenario(scenario_id: str):
         raise HTTPException(status_code=500, detail=f"Scenario file missing: {csv_path}")
     manifest = orchestrator.execute_workflow(scenario_id=scenario_id, csv_path=csv_path)
     return manifest
+
+
+@app.post("/api/run-custom")
+async def run_custom_file(file: UploadFile = File(...), objective: str = Form("Automated pipeline audit")):
+    tmp_dir = Path(tempfile.mkdtemp(prefix="maria_custom_"))
+    try:
+        raw_filename = file.filename or "uploaded_data.csv"
+        file_ext = Path(raw_filename).suffix.lower()
+        raw_dest = tmp_dir / raw_filename
+
+        content = await file.read()
+        raw_dest.write_bytes(content)
+
+        # Convert Excel (.xlsx, .xls) or TSV to standard CSV for the sandbox
+        csv_dest = tmp_dir / "converted_input.csv"
+        if file_ext in [".xlsx", ".xls"]:
+            df = pd.read_excel(raw_dest)
+            df.to_csv(csv_dest, index=False)
+        elif file_ext == ".tsv":
+            df = pd.read_csv(raw_dest, sep="\t")
+            df.to_csv(csv_dest, index=False)
+        else:
+            csv_dest = raw_dest
+
+        # Route through self-healing execution engine
+        manifest = orchestrator.execute_workflow(scenario_id="scenario_1", csv_path=csv_dest)
+        manifest["scenario_name"] = f"Custom Ingested File: {raw_filename}"
+        return manifest
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"File execution error: {str(exc)}")
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 @app.get("/artifacts/{run_id}/{filename}")

@@ -1,119 +1,252 @@
-
+$htmlDashboard = @'
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>M.A.R.I.A. | Blast Radius Zero Execution Firewall</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
   <style>
-    body { background-color: #090d16; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
-    .glass { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(51, 65, 85, 0.8); }
+    body { background-color: #060913; color: #cbd5e1; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .glass { background: rgba(13, 20, 38, 0.82); border: 1px solid rgba(30, 45, 78, 0.75); backdrop-filter: blur(14px); }
     .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .glow-cyan { box-shadow: 0 0 25px rgba(6, 182, 212, 0.12); }
+    .glow-rose { box-shadow: 0 0 25px rgba(244, 63, 94, 0.18); }
+    .pulse-ring { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); animation: pulse-anim 2s infinite; }
+    @keyframes pulse-anim {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    pre[class*="language-"] { margin: 0; border-radius: 0.5rem; font-size: 11px; }
+
+    /* CUSTOM DARK MODE SCROLLBARS */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
-  <!-- TOP HOST VM TELEMETRY BAR -->
-  <header class="border-b border-slate-800 bg-slate-950/90 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+<body class="min-h-screen flex flex-col antialiased">
+
+  <header class="border-b border-slate-800/80 bg-slate-950/90 px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
     <div class="flex items-center gap-3">
-      <div class="h-3 w-3 rounded-full bg-emerald-400 animate-pulse"></div>
+      <div class="h-3.5 w-3.5 rounded-full bg-emerald-400 pulse-ring"></div>
       <div>
-        <span class="font-bold tracking-wider text-white text-lg">M.A.R.I.A.</span>
-        <span class="text-xs uppercase tracking-widest px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 ml-2">Blast Radius Zero Firewall</span>
+        <span class="font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-300 text-lg">M.A.R.I.A.</span>
+        <span class="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/30 ml-2">Blast Radius Zero</span>
       </div>
     </div>
     <div class="flex flex-wrap items-center gap-5 text-xs mono">
-      <div><span class="text-slate-400">HOST CPU:</span> <span id="host-cpu" class="text-emerald-400 font-semibold">--%</span></div>
-      <div><span class="text-slate-400">HOST RAM:</span> <span id="host-ram" class="text-emerald-400 font-semibold">-- / -- GB</span></div>
-      <div><span class="text-slate-400">ORPHAN CONTAINERS:</span> <span id="host-orphans" class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">0</span></div>
-      <div><span class="text-slate-400">JAIL ENGINE:</span> <span id="host-runtime" class="text-sky-300">Docker + cgroups-v2</span></div>
-      <div><span class="text-slate-400">VULTR INFERENCE:</span> <span id="host-vultr" class="text-amber-300">Loading...</span></div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-microchip text-slate-500"></i>
+        <span class="text-slate-400">HOST CPU:</span>
+        <span id="host-cpu" class="text-emerald-400 font-bold">--%</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-memory text-slate-500"></i>
+        <span class="text-slate-400">HOST RAM:</span>
+        <span id="host-ram" class="text-emerald-400 font-bold">-- / -- GB</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-layer-group text-slate-500"></i>
+        <span class="text-slate-400">ORPHAN SANDBOXES:</span>
+        <span id="host-orphans" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">0</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-shield-halved text-sky-400"></i>
+        <span class="text-slate-400">JAIL:</span>
+        <span id="host-runtime" class="text-sky-300 font-semibold">Docker + cgroups-v2</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-bolt text-amber-400"></i>
+        <span class="text-slate-400">VULTR INFERENCE:</span>
+        <span id="host-vultr" class="text-amber-300 font-semibold">Loading...</span>
+      </div>
     </div>
   </header>
 
-  <!-- SCENARIO SELECTOR BAR -->
-  <section class="px-6 py-4 bg-slate-900/60 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
-    <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-      ⚡ Interactive Judge Verification Scenarios (Click to Execute inside Ephemeral Sandbox):
+  <section class="px-6 py-3 bg-slate-900/40 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+      <i class="fa-solid fa-play text-sky-400 text-[10px]"></i> Dispatched Sandbox Scenarios:
     </div>
-    <div class="flex flex-wrap gap-3">
-      <button onclick="triggerScenario('scenario_1')" class="px-4 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold transition">
-        🧪 1. Self-Healing Biomarker ML (Retry + Leakage Gate)
+    <div class="flex flex-wrap gap-3 items-center">
+      <button onclick="triggerScenario('scenario_1')" class="px-4 py-2 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-300 text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+        <i class="fa-solid fa-flask-vial text-emerald-400"></i> 1. Self-Healing ML Pipeline
       </button>
-      <button onclick="triggerScenario('scenario_2')" class="px-4 py-2 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-xs font-semibold transition">
-        🚨 2. Indirect Prompt Injection CSV (Exfiltration Trap)
+      <button onclick="triggerScenario('scenario_2')" class="px-4 py-2 rounded-lg bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/40 text-rose-300 text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+        <i class="fa-solid fa-skull-crossbones text-rose-400"></i> 2. Indirect Prompt Injection
       </button>
-      <button onclick="triggerScenario('scenario_3')" class="px-4 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition">
-        💣 3. 512MB RAM Cgroup Matrix Bomb (OOM Kill Trap)
+      <button onclick="triggerScenario('scenario_3')" class="px-4 py-2 rounded-lg bg-amber-600/15 hover:bg-amber-600/25 border border-amber-500/40 text-amber-300 text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+        <i class="fa-solid fa-bomb text-amber-400"></i> 3. 512MB RAM Matrix Bomb
+      </button>
+      <div class="h-5 w-px bg-slate-800 mx-1 hidden sm:block"></div>
+      
+      <input type="file" id="custom-file" class="hidden" accept=".csv,.xlsx,.xls,.tsv,.txt" onchange="handleCustomUpload(event)">
+      <button onclick="document.getElementById('custom-file').click()" class="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600/30 to-sky-600/30 hover:from-indigo-600/40 hover:to-sky-600/40 border border-sky-500/40 text-sky-200 text-xs font-semibold transition flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.15)]">
+        <i class="fa-solid fa-cloud-arrow-up text-sky-400"></i> Upload Custom CSV / XLSX
       </button>
     </div>
   </section>
 
-  <!-- MAIN 2-COLUMN WORKSPACE -->
   <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
-    <!-- LEFT COLUMN: INPUT PREVIEW, SECURITY POLICY & ARTIFACTS -->
     <div class="lg:col-span-5 flex flex-col gap-6">
-      <div class="glass rounded-xl p-5">
+      
+      <div class="glass rounded-xl p-5 glow-cyan">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">🔒 Active Sandbox Containment Policy</h2>
-          <span class="text-xs mono text-emerald-400">ENFORCED</span>
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-virus text-sky-400"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Blast Radius Zero Containment Rules</h2>
+          </div>
+          <span class="text-[10px] mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">KERNEL LOCKED</span>
         </div>
-        <div class="grid grid-cols-2 gap-2.5 text-xs mono">
-          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Network Access</span><span class="text-rose-400 font-bold">--network none (Air-Gapped)</span></div>
-          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Hard RAM / Swap Cap</span><span class="text-sky-300 font-bold">512 MB (Zero Swap)</span></div>
-          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Root Filesystem</span><span class="text-amber-300 font-bold">READ-ONLY + 64MB tmpfs</span></div>
-          <div class="p-2.5 rounded bg-slate-900/90 border border-slate-800"><span class="text-slate-400 block">Host Secrets Injected</span><span class="text-emerald-400 font-bold">0 Keys (Sanitized Env)</span></div>
+        <div class="grid grid-cols-2 gap-3 text-xs mono">
+          <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80">
+            <span class="text-slate-400 text-[11px] block mb-1">Network Socket Policy</span>
+            <span class="text-rose-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-ban text-[10px]"></i> --network none (Air-Gap)</span>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80">
+            <span class="text-slate-400 text-[11px] block mb-1">Memory / Swap Ceiling</span>
+            <span class="text-sky-300 font-bold flex items-center gap-1.5"><i class="fa-solid fa-gauge-high text-[10px]"></i> 512 MB (Zero Swap)</span>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80">
+            <span class="text-slate-400 text-[11px] block mb-1">Filesystem Access</span>
+            <span class="text-amber-300 font-bold flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> READ-ONLY Root + tmpfs</span>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800/80">
+            <span class="text-slate-400 text-[11px] block mb-1">Host Secrets Injection</span>
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5"><i class="fa-solid fa-key text-[10px]"></i> 0 Keys (Sanitized Env)</span>
+          </div>
         </div>
       </div>
 
-      <div class="glass rounded-xl p-5">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 mb-2">📂 Untrusted Input Dataset Preview</h2>
-        <div id="csv-filename" class="text-xs mono text-sky-400 mb-2">Select a scenario above...</div>
-        <pre id="csv-preview" class="text-xs mono bg-slate-950 p-3 rounded-lg border border-slate-800 overflow-x-auto text-slate-300 max-h-48">Click any of the 3 scenario buttons above to inspect the untrusted CSV payload and dispatch an isolated sandbox run.</pre>
+      <div class="glass rounded-xl p-5 flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-file-csv text-sky-400"></i> Untrusted Input Dataset
+          </h2>
+          <span id="csv-filename" class="text-xs mono text-sky-400 font-semibold truncate max-w-[200px]">None selected</span>
+        </div>
+        <div id="drop-area" class="border-2 border-dashed border-slate-700/80 hover:border-sky-500/50 rounded-lg p-3 transition bg-slate-950/60 cursor-pointer text-xs mono text-slate-300" onclick="document.getElementById('custom-file').click()">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px] text-slate-400">
+            <span><i class="fa-solid fa-cloud-arrow-up text-sky-400 mr-1"></i> Drop CSV or XLSX here to audit</span>
+            <span class="text-slate-500">Auto-parsed</span>
+          </div>
+          <pre id="csv-preview" class="overflow-x-auto max-h-44 whitespace-pre leading-relaxed text-slate-300">Select a scenario above or drop any custom CSV/XLSX file here to dispatch into the isolated jail...</pre>
+        </div>
       </div>
 
-      <div id="artifact-panel" class="glass rounded-xl p-5 hidden">
+      <div id="artifact-panel" class="glass rounded-xl p-5 hidden transition-all duration-500 ease-in-out">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-bold uppercase tracking-wider text-emerald-300">🖼️ Verified Sandbox Output Artifacts</h2>
-          <a id="download-csv-btn" href="#" download class="text-xs mono px-3 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30">⬇️ Cleaned CSV</a>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-emerald-400"></i> Verified Sandbox Output Artifacts
+          </h2>
+          <a id="download-csv-btn" href="#" download class="text-xs mono px-3 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 transition flex items-center gap-1.5 font-semibold">
+            <i class="fa-solid fa-download text-[11px]"></i> Cleaned CSV
+          </a>
         </div>
-        <img id="artifact-img" src="" alt="Verified ROC & Feature Chart" class="w-full rounded-lg border border-slate-700 mb-2" />
+        <img id="artifact-img" src="" alt="Verified ROC & Feature Chart" class="w-full rounded-lg border border-slate-700 shadow-xl" />
       </div>
+
     </div>
 
-    <!-- RIGHT COLUMN: LIVE EXECUTION TRACE, CONTAINMENT ALERTS & MANIFEST -->
     <div class="lg:col-span-7 flex flex-col gap-6">
-      <!-- STATUS BANNER -->
-      <div id="status-banner" class="glass rounded-xl p-5 border-l-4 border-l-sky-500">
+      
+      <div id="status-banner" class="glass rounded-xl p-5 border-l-4 border-l-sky-500 transition-all duration-300">
         <div class="flex items-center justify-between">
           <div>
-            <div id="status-title" class="text-base font-bold text-white">Ready for Sandbox Dispatch</div>
-            <div id="status-subtitle" class="text-xs text-slate-400 mt-0.5">Every execution spawns a fresh, unprivileged container (UID 65534) and self-destructs on exit.</div>
+            <div id="status-title" class="text-base font-bold text-white flex items-center gap-2">
+              <i id="status-icon" class="fa-solid fa-circle-check text-sky-400"></i> Control Plane Ready
+            </div>
+            <div id="status-subtitle" class="text-xs text-slate-400 mt-1">
+              Containers execute with UID 65534 (nobody), zero root capabilities, and automatic Dead-Man's Switch reap.
+            </div>
           </div>
-          <div id="status-badge" class="text-xs mono px-3 py-1 rounded bg-slate-800 text-slate-300">IDLE</div>
+          <div id="status-badge" class="text-xs mono px-3 py-1 rounded bg-slate-800 text-slate-300 font-semibold">STANDBY</div>
         </div>
       </div>
 
-      <!-- ATTEMPTS & SELF-HEALING TIMELINE -->
-      <div class="glass rounded-xl p-5 flex-1">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 mb-4">🔄 Sandbox Execution & Containment Trace</h2>
-        <div id="attempts-container" class="space-y-4 text-xs mono text-slate-400">
-          No active execution trace. Click a scenario button at the top to begin.
+      <div class="glass rounded-xl p-5 flex-1 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-terminal text-sky-400"></i> Sandbox Execution & Containment Trace
+          </h2>
+          <span id="attempt-counter" class="text-xs mono text-slate-400">Attempts: 0</span>
+        </div>
+
+        <div id="attempts-container" class="space-y-4 text-xs mono flex-1">
+          <div id="architecture-preview" class="p-6 rounded-xl border border-slate-800/80 bg-slate-950/40 text-center flex flex-col items-center justify-center h-full min-h-[300px]">
+            <div class="flex items-center justify-center gap-4 text-slate-600 mb-4">
+              <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center gap-2 w-28">
+                <i class="fa-solid fa-cloud text-sky-400 text-2xl"></i>
+                <span class="text-[10px] mono text-slate-400">Vultr API</span>
+              </div>
+              <i class="fa-solid fa-arrow-right text-slate-600"></i>
+              <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center gap-2 w-28">
+                <i class="fa-solid fa-code text-indigo-400 text-2xl"></i>
+                <span class="text-[10px] mono text-slate-400">AST Contract</span>
+              </div>
+              <i class="fa-solid fa-arrow-right text-slate-600"></i>
+              <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center gap-2 w-28">
+                <i class="fa-solid fa-shield-halved text-emerald-400 text-2xl"></i>
+                <span class="text-[10px] mono text-slate-400">gVisor Jail</span>
+              </div>
+            </div>
+            <h3 class="text-sm font-semibold text-slate-300 mb-1">Blast Radius Zero Engine Active</h3>
+            <p class="text-xs text-slate-500 max-w-md">Select any scenario above or upload a CSV to witness automatic containment, runtime self-healing, and cryptographic integrity verification in action.</p>
+          </div>
         </div>
       </div>
 
-      <!-- CRYPTOGRAPHIC VERIFICATION MANIFEST -->
       <div class="glass rounded-xl p-5">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">📜 Cryptographic Verification Manifest (SHA-256)</h2>
-          <span id="manifest-hash" class="text-xs mono text-sky-400">N/A</span>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-stamp text-sky-400"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Cryptographic Verification Manifest</h2>
+          </div>
+          <button onclick="copyManifestJson()" class="text-xs mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-1.5 border border-slate-700">
+            <i class="fa-solid fa-copy"></i> Copy JSON
+          </button>
         </div>
-        <pre id="manifest-json" class="text-xs mono bg-slate-950 p-3 rounded-lg border border-slate-800 overflow-x-auto text-slate-300 max-h-60">{ "status": "awaiting_execution" }</pre>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs mono">
+          <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">MANIFEST SHA-256 HASH</span>
+            <span id="manifest-hash-badge" class="text-sky-300 font-bold truncate block">Awaiting Execution</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">INPUT SHA-256 DIGEST</span>
+            <span id="manifest-input-badge" class="text-slate-300 font-bold truncate block">--</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">CONTAINMENT VERDICT</span>
+            <span id="manifest-verdict-badge" class="text-slate-400 font-bold block">STANDBY</span>
+          </div>
+        </div>
+
+        <details class="bg-slate-950/90 rounded-lg border border-slate-800/80">
+          <summary class="px-3 py-2 text-xs mono text-slate-400 cursor-pointer hover:text-slate-200 transition">
+            ▶ View Complete Cryptographic Audit Manifest (JSON)
+          </summary>
+          <div class="p-3 pt-0">
+            <pre><code id="manifest-json" class="language-json">{ "status": "awaiting_execution" }</code></pre>
+          </div>
+        </details>
       </div>
+
     </div>
   </main>
 
   <script>
+    let currentManifestData = null;
+
     async function refreshHostTelemetry() {
       try {
         const res = await fetch('/api/host-telemetry');
@@ -125,112 +258,213 @@
         document.getElementById('host-vultr').textContent = data.vultr_inference_mode;
       } catch (e) {}
     }
-    setInterval(refreshHostTelemetry, 2500);
+    setInterval(refreshHostTelemetry, 2000);
     refreshHostTelemetry();
 
-    async function triggerScenario(scenarioId) {
+    function prepareUIForDispatch(title, subtitle, colorClass, iconClass) {
+      document.getElementById('artifact-panel').classList.add('hidden');
       const banner = document.getElementById('status-banner');
-      const title = document.getElementById('status-title');
-      const subtitle = document.getElementById('status-subtitle');
+      banner.className = `glass rounded-xl p-5 border-l-4 border-l-${colorClass}-400 transition-all duration-300`;
+      
+      document.getElementById('status-title').innerHTML = `<i class="${iconClass} text-${colorClass}-400"></i> ${title}`;
+      document.getElementById('status-subtitle').textContent = subtitle;
+      
+      const badge = document.getElementById('status-badge');
+      badge.className = `text-xs mono px-3 py-1 rounded bg-${colorClass}-500/20 text-${colorClass}-300 animate-pulse font-bold`;
+      badge.textContent = 'SANDBOX RUNNING';
+      
+      document.getElementById('attempts-container').innerHTML = `
+        <div class="p-6 rounded-xl border border-sky-500/30 bg-sky-950/20 text-sky-300 flex items-center justify-center gap-3 animate-pulse">
+          <i class="fa-solid fa-spinner fa-spin text-xl"></i>
+          <span>Dispatching unprivileged container into BlastRadiusZeroJail...</span>
+        </div>
+      `;
+    }
+
+    function renderManifestResult(manifest) {
+      currentManifestData = manifest;
+      const banner = document.getElementById('status-banner');
       const badge = document.getElementById('status-badge');
       const attemptsBox = document.getElementById('attempts-container');
-      const artifactPanel = document.getElementById('artifact-panel');
 
-      artifactPanel.classList.add('hidden');
-      banner.className = 'glass rounded-xl p-5 border-l-4 border-l-sky-400';
-      title.textContent = 'Spawning Ephemeral Container & Executing Untrusted Code...';
-      subtitle.textContent = 'Enforcing --network none, --read-only rootfs, 512MB RAM cap, and 0 host secrets.';
-      badge.className = 'text-xs mono px-3 py-1 rounded bg-sky-500/20 text-sky-300 animate-pulse';
-      badge.textContent = 'RUNNING IN SANDBOX';
-      attemptsBox.innerHTML = '<div class="text-sky-300 animate-pulse">⏳ Dispatching workload to BlastRadiusZeroJail...</div>';
+      const manifestHash = manifest.manifest_sha256 ? manifest.manifest_sha256.slice(0, 16) + '...' : 'N/A';
+      const inputHash = manifest.input_csv_sha256 ? manifest.input_csv_sha256.slice(0, 16) + '...' : 'N/A';
 
-      try {
-        const prevRes = await fetch(`/api/scenario-preview/${scenarioId}`);
-        const prevData = await prevRes.json();
-        document.getElementById('csv-filename').textContent = `${prevData.filename}`;
-        document.getElementById('csv-preview').textContent = prevData.preview_lines.join('\n');
-      } catch (e) {}
-
-      const res = await fetch(`/api/run-scenario/${scenarioId}`, { method: 'POST' });
-      const manifest = await res.json();
-
-      document.getElementById('manifest-hash').textContent = 'SHA256: ' + manifest.manifest_sha256.slice(0, 20) + '...';
+      document.getElementById('manifest-hash-badge').textContent = manifestHash;
+      document.getElementById('manifest-input-badge').textContent = inputHash;
       document.getElementById('manifest-json').textContent = JSON.stringify(manifest, null, 2);
+      Prism.highlightElement(document.getElementById('manifest-json'));
+
+      document.getElementById('attempt-counter').textContent = `Attempts: ${manifest.total_attempts || 0}`;
 
       if (manifest.final_status === 'VERIFIED_SUCCESS') {
-        banner.className = 'glass rounded-xl p-5 border-l-4 border-l-emerald-500';
-        title.textContent = '✅ Verified Execution Complete (Zero Leakage & Self-Healed)';
-        subtitle.textContent = `${manifest.scenario_name} — Completed in ${manifest.total_attempts} attempts.`;
+        banner.className = 'glass rounded-xl p-5 border-l-4 border-l-emerald-500 bg-emerald-950/15';
+        document.getElementById('status-title').innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i> Verified Execution Complete (Self-Healed)';
+        document.getElementById('status-subtitle').textContent = `${manifest.scenario_name} — Successfully verified in ${manifest.total_attempts} attempts.`;
         badge.className = 'text-xs mono px-3 py-1 rounded bg-emerald-500/20 text-emerald-300 font-bold';
         badge.textContent = 'VERIFIED_SUCCESS';
+        document.getElementById('manifest-verdict-badge').innerHTML = '<span class="text-emerald-400"><i class="fa-solid fa-certificate"></i> VERIFIED SUCCESS</span>';
+      
       } else if (manifest.final_status === 'CONTAINMENT_TRIGGERED') {
         banner.className = 'glass rounded-xl p-5 border-l-4 border-l-rose-500 bg-rose-950/30';
-        title.textContent = '🚨 BLAST RADIUS ZERO CONTAINMENT TRIGGERED — HOST UNHARMED';
-        subtitle.textContent = 'Untrusted payload violated sandbox boundary and was immediately neutralized & destroyed.';
+        document.getElementById('status-title').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> BLAST RADIUS ZERO CONTAINMENT TRIGGERED';
+        document.getElementById('status-subtitle').textContent = 'Malicious/adversarial payload neutralized at container boundary. Host VM completely unharmed.';
         badge.className = 'text-xs mono px-3 py-1 rounded bg-rose-500/30 text-rose-200 font-bold';
         badge.textContent = 'CONTAINED & KILLED';
+        document.getElementById('manifest-verdict-badge').innerHTML = '<span class="text-rose-400"><i class="fa-solid fa-hand"></i> CONTAINED & TERMINATED</span>';
+      
+      } else {
+        banner.className = 'glass rounded-xl p-5 border-l-4 border-l-rose-500 bg-rose-950/20';
+        document.getElementById('status-title').innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-400"></i> Execution Failed (Data Format Error)';
+        document.getElementById('status-subtitle').textContent = 'The script crashed in the sandbox. The data format may not match expected columns.';
+        badge.className = 'text-xs mono px-3 py-1 rounded bg-rose-500/30 text-rose-200 font-bold';
+        badge.textContent = 'EXECUTION FAILED';
+        document.getElementById('manifest-verdict-badge').innerHTML = '<span class="text-rose-400"><i class="fa-solid fa-circle-xmark"></i> EXECUTION FAILED</span>';
       }
 
       attemptsBox.innerHTML = '';
-      manifest.attempts.forEach(att => {
+      (manifest.attempts || []).forEach(att => {
         const isContained = att.status === 'CONTAINED_HALTED';
         const isSuccess = att.status === 'VERIFIED_SUCCESS';
-        const borderCol = isContained ? 'border-rose-500/60 bg-rose-950/20' : (isSuccess ? 'border-emerald-500/50 bg-emerald-950/10' : 'border-amber-500/50 bg-amber-950/10');
+        const borderCol = isContained ? 'border-rose-500/60 bg-rose-950/20 glow-rose' : (isSuccess ? 'border-emerald-500/50 bg-emerald-950/15' : 'border-rose-500/50 bg-rose-950/15');
         const memPct = Math.min(100, Math.round((att.peak_memory_mb / 512) * 100));
         const memColor = memPct >= 95 ? 'bg-rose-500' : 'bg-sky-400';
 
         let eventsHtml = '';
         if (att.containment_events && att.containment_events.length > 0) {
-          eventsHtml = '<div class="mt-2 space-y-1">' + att.containment_events.map(e =>
-            `<div class="p-2 rounded bg-rose-500/20 border border-rose-500/40 text-rose-200 font-semibold">🛡️ ${e}</div>`
+          eventsHtml = '<div class="mt-3 space-y-1.5">' + att.containment_events.map(e =>
+            `<div class="p-2.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-200 font-semibold flex items-center gap-2"><i class="fa-solid fa-shield-halved text-rose-400"></i> ${e}</div>`
           ).join('') + '</div>';
         }
 
         let errHtml = '';
         if (att.stderr && !isSuccess) {
           const lastLines = att.stderr.trim().split('\n').slice(-4).join('\n');
-          errHtml = `<pre class="mt-2 p-2 rounded bg-slate-950 text-amber-300 overflow-x-auto border border-slate-800">${lastLines}</pre>`;
+          errHtml = `<div class="mt-3"><div class="text-[10px] text-amber-400 font-bold mb-1">INTERCEPTED STDERR:</div><pre class="p-3 rounded-lg bg-slate-950 text-amber-300 overflow-x-auto border border-slate-800 leading-relaxed font-mono">${lastLines}</pre></div>`;
         }
 
         let outHtml = '';
         if (att.stdout) {
-          outHtml = `<pre class="mt-2 p-2 rounded bg-slate-950 text-emerald-300 overflow-x-auto border border-slate-800">${att.stdout.trim()}</pre>`;
+          outHtml = `<div class="mt-3"><div class="text-[10px] text-emerald-400 font-bold mb-1">STDOUT TELEMETRY:</div><pre class="p-3 rounded-lg bg-slate-950 text-emerald-300 overflow-x-auto border border-slate-800 leading-relaxed font-mono">${att.stdout.trim()}</pre></div>`;
         }
 
         attemptsBox.innerHTML += `
-          <div class="p-4 rounded-lg border ${borderCol}">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <span class="font-bold text-white">Attempt #${att.attempt_number} — Container <span class="text-sky-300">${att.run_id}</span></span>
-              <span class="px-2 py-0.5 rounded bg-slate-900 text-slate-200">Exit Code: ${att.exit_code} | ${att.duration_ms}ms | Status: ${att.status}</span>
+          <div class="p-4 rounded-xl border ${borderCol} transition-all duration-300">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <span class="font-bold text-white text-xs flex items-center gap-2">
+                <i class="fa-solid fa-box text-sky-400"></i> Attempt #${att.attempt_number} — <span class="text-sky-300">${att.run_id}</span>
+              </span>
+              <span class="px-2.5 py-0.5 rounded bg-slate-900 text-slate-200 border border-slate-700 text-[11px]">
+                Exit Code: ${att.exit_code} | ${att.duration_ms}ms | ${att.status}
+              </span>
             </div>
             <div class="mb-2">
-              <div class="flex justify-between text-xs mb-1">
-                <span>Peak Container RAM Usage</span>
-                <span>${att.peak_memory_mb} MB / 512 MB</span>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-slate-400">Peak Sandbox Memory</span>
+                <span class="font-bold ${memPct >= 95 ? 'text-rose-400' : 'text-slate-300'}">${att.peak_memory_mb} MB / 512 MB</span>
               </div>
-              <div class="w-full h-2 bg-slate-800 rounded overflow-hidden">
-                <div class="${memColor} h-full" style="width: ${memPct}%"></div>
+              <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div class="${memColor} h-full transition-all duration-700" style="width: ${memPct}%"></div>
               </div>
             </div>
             ${eventsHtml}
             ${errHtml}
             ${outHtml}
-            <div class="mt-2 text-right text-[11px] text-slate-400">🗑️ Ephemeral container ${att.run_id} & scratch volume destroyed cleanly.</div>
+            <div class="mt-3 text-right text-[10px] text-slate-500 font-mono">
+              <i class="fa-solid fa-trash-can text-[9px]"></i> Ephemeral container ${att.run_id} wiped with zero leftover state.
+            </div>
           </div>
         `;
       });
 
-      if (manifest.artifact_run_id && manifest.output_artifacts['roc_feature_audit.png']) {
-        artifactPanel.classList.remove('hidden');
+      if (manifest.artifact_run_id && manifest.output_artifacts && manifest.output_artifacts['roc_feature_audit.png']) {
+        const panel = document.getElementById('artifact-panel');
+        panel.classList.remove('hidden');
         document.getElementById('artifact-img').src = `/artifacts/${manifest.artifact_run_id}/roc_feature_audit.png?t=${Date.now()}`;
         document.getElementById('download-csv-btn').href = `/artifacts/${manifest.artifact_run_id}/cleaned_dataset.csv`;
       }
       refreshHostTelemetry();
     }
+
+    async function triggerScenario(scenarioId) {
+      prepareUIForDispatch('Executing Untrusted Workload...', 'Enforcing --network none, --read-only rootfs, and 512MB RAM cap.', 'sky', 'fa-solid fa-play');
+      try {
+        const prevRes = await fetch(`/api/scenario-preview/${scenarioId}`);
+        const prevData = await prevRes.json();
+        document.getElementById('csv-filename').textContent = prevData.filename;
+        document.getElementById('csv-preview').textContent = prevData.preview_lines.join('\n');
+      } catch (e) {}
+
+      try {
+        const res = await fetch(`/api/run-scenario/${scenarioId}`, { method: 'POST' });
+        const manifest = await res.json();
+        renderManifestResult(manifest);
+      } catch (err) {
+        document.getElementById('attempts-container').innerHTML = `
+          <div class="text-rose-400 p-4 border border-rose-500/50 bg-rose-950/20 rounded-xl">
+            Scenario Execution Error: ${err}
+          </div>
+        `;
+      }
+    }
+
+    async function handleCustomUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      prepareUIForDispatch('Processing Uploaded File...', `Executing ${file.name} inside Zero Trust Container...`, 'indigo', 'fa-solid fa-cloud-arrow-up');
+      document.getElementById('csv-filename').textContent = file.name;
+
+      if (file.name.endsWith('.csv') || file.name.endsWith('.tsv') || file.name.endsWith('.txt')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('csv-preview').textContent = e.target.result.split('\n').slice(0, 10).join('\n') + '\n...';
+        };
+        reader.readAsText(file);
+      } else {
+        document.getElementById('csv-preview').textContent = `[Binary Spreadsheet: ${file.name}]\nAutomatically converting sheets to clean CSV for sandbox execution...`;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('objective', 'Custom ML dataset execution');
+
+      try {
+        const res = await fetch('/api/run-custom', { method: 'POST', body: formData });
+        if (!res.ok) {
+          const errDetail = await res.text();
+          throw new Error(`Server returned HTTP ${res.status}: ${errDetail}`);
+        }
+        const manifest = await res.json();
+        renderManifestResult(manifest);
+      } catch (err) {
+        document.getElementById('attempts-container').innerHTML = `
+          <div class="text-rose-400 p-4 border border-rose-500/50 bg-rose-950/20 rounded-xl">
+            Upload Execution Error: ${err.message}
+          </div>
+        `;
+      }
+      event.target.value = '';
+    }
+
+    function copyManifestJson() {
+      if (!currentManifestData) return;
+      navigator.clipboard.writeText(JSON.stringify(currentManifestData, null, 2));
+      alert("Manifest JSON copied to clipboard!");
+    }
+
+    const dropArea = document.getElementById('drop-area');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => {
+      dropArea.addEventListener(name, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+    dropArea.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        handleCustomUpload({ target: { files: files } });
+      }
+    });
   </script>
 </body>
 </html>
-'@
-
-New-Item -ItemType Directory -Path web/static -Force
-$htmlDashboard | Out-File -FilePath web/static/index.html -Encoding utf8
+'@ | Out-File -FilePath web/static/index.html -Encoding utf8
