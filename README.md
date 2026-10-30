@@ -36,9 +36,3 @@ maria-vultr/
 ├── artifacts/                    # Verified output charts & cleaned CSVs with SHA-256 hashes
 └── requirements.txt              # Control plane dependencies
 
-
-
-
-
-git clone [https://github.com/smgunjikar/maria.git](https://github.com/smgunjikar/maria.git)
-cd MARIA
