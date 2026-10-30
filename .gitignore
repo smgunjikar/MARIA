@@ -16,3 +16,10 @@ reconciled_enterprise_dataset.csv
 # Local test artifacts & temporary logs
 check_run_error.py
 *.log
+
+# Ephemeral sandbox runtime artifacts and run dumps
+artifacts/maria-sbx-*/
+run_diag.py
+verify_now.py
+check_run_error.py
+custom_chaotic_test.csv
