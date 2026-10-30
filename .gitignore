@@ -1,7 +1,18 @@
-﻿.env
+# Environments & Bytecode
 __pycache__/
-*.pyc
-artifacts/*
-!artifacts/.gitkeep
-.venv/
+*.py[cod]
+*.class
+.env
 venv/
+env/
+.pytest_cache/
+
+# Large Test Datasets & Downloaded CSVs (>25MB GitHub limit)
+massive_enterprise_chaotic_*.csv
+cleaned_dataset*.csv
+reconciled_enterprise_dataset.csv
+*.xlsx
+
+# Local test artifacts & temporary logs
+check_run_error.py
+*.log

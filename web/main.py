@@ -53,7 +53,7 @@ def get_scenario_preview(scenario_id: str):
     if scenario_id not in SCENARIO_FILES:
         raise HTTPException(status_code=404, detail="Unknown scenario_id")
     csv_path = SCENARIO_FILES[scenario_id]
-    lines = csv_path.read_text(encoding="utf-8").splitlines()[:10]
+    lines = csv_path.read_text(encoding="utf-8-sig").splitlines()[:10]
     return {"filename": csv_path.name, "preview_lines": lines}
 
 
@@ -74,24 +74,27 @@ async def run_custom_file(file: UploadFile = File(...), objective: str = Form("A
     try:
         raw_filename = file.filename or "uploaded_data.csv"
         file_ext = Path(raw_filename).suffix.lower()
-        raw_dest = tmp_dir / raw_filename
-
         content = await file.read()
-        raw_dest.write_bytes(content)
+        csv_dest = tmp_dir / "sanitized_input.csv"
 
-        # Convert Excel (.xlsx, .xls) or TSV to standard CSV for the sandbox
-        csv_dest = tmp_dir / "converted_input.csv"
         if file_ext in [".xlsx", ".xls"]:
+            raw_dest = tmp_dir / raw_filename
+            raw_dest.write_bytes(content)
             df = pd.read_excel(raw_dest)
             df.to_csv(csv_dest, index=False)
-        elif file_ext == ".tsv":
-            df = pd.read_csv(raw_dest, sep="\t")
-            df.to_csv(csv_dest, index=False)
         else:
-            csv_dest = raw_dest
+            # Strip UTF-8 BOM and unwrap outer quotes on each line
+            text = content.decode("utf-8-sig", errors="ignore")
+            clean_lines = []
+            for line in text.splitlines():
+                s = line.strip().lstrip("\ufeff").strip()
+                if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+                    s = s[1:-1].strip()
+                if s:
+                    clean_lines.append(s)
+            csv_dest.write_text("\n".join(clean_lines), encoding="utf-8")
 
-        # Route through self-healing execution engine
-        manifest = orchestrator.execute_workflow(scenario_id="scenario_1", csv_path=csv_dest)
+        manifest = orchestrator.execute_workflow(scenario_id="custom", csv_path=csv_dest)
         manifest["scenario_name"] = f"Custom Ingested File: {raw_filename}"
         return manifest
     except Exception as exc:
