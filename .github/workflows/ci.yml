@@ -1,0 +1,37 @@
+name: M.A.R.I.A. CI & Integrity Verification
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest fastmcp "mcp[cli]"
+
+    - name: Verify AST Contract & MCP Server Imports
+      run: |
+        python -c "from core.ast_contract import ZeroLeakageASTContract; print('AST Contract OK')"
+        python -c "from core.gvisor_jail import BlastRadiusZeroJail; print('Jail Scaffold OK')"
+        python -c "import mcp_server; print('MCP Server Import OK')"
+
+    - name: Run Pytest Suite
+      run: |
+        pytest -v
